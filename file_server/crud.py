@@ -1,9 +1,15 @@
 import base64
 
-from settings import MEDIA_DIR
+from settings import FILE_SIZE_LIMIT, MEDIA_DIR
 
 
 MEDIA_DIR.mkdir(exist_ok=True)
+
+
+class FileIsTooBig(MemoryError):
+    def __init__(self, limit: int, *args) -> None:
+        super().__init__(*args)
+        self.limit = limit
 
 
 class FileCRUD:
@@ -19,6 +25,8 @@ class FileCRUD:
     def create(self, file_name: str, data: str) -> None:
         """Creates local file from base64-encoded data"""
         data = base64.b64decode(data)
+        if len(data) > FILE_SIZE_LIMIT:
+            raise FileIsTooBig(limit=FILE_SIZE_LIMIT)
         with open(MEDIA_DIR.joinpath(file_name), 'wb') as file:
             file.write(data)
 

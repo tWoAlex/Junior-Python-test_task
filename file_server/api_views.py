@@ -1,13 +1,11 @@
 from http import HTTPStatus
-from math import ceil
 
 from flask import jsonify, request
 from werkzeug.exceptions import UnsupportedMediaType
 
 from . import app
-from .crud import file_crud
+from .crud import FileIsTooBig, file_crud
 from .error_handlers import InvalidAPIUsage
-from settings import FILE_SIZE_LIMIT
 
 
 file_not_found = InvalidAPIUsage('file does not exist', HTTPStatus.NOT_FOUND)
@@ -60,9 +58,11 @@ def create_file() -> tuple[str, int]:
     data = data.get(file_name, None)
     if data is None:
         raise InvalidAPIUsage(f'"{file_name}" key is missing')
-    if ceil(FILE_SIZE_LIMIT / 3) * 4 < len(data):
-        raise InvalidAPIUsage('File size exceeds maximum of'
-                              f' {FILE_SIZE_LIMIT} bytes')
 
-    file_crud.create(file_name, data)
+    try:
+        file_crud.create(file_name, data)
+    except FileIsTooBig as exc:
+        raise InvalidAPIUsage('File size exceeds maximum of'
+                              f' {exc.limit} bytes')
+
     return jsonify({'message': 'created'}), HTTPStatus.CREATED

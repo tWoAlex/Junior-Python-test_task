@@ -15,7 +15,7 @@ class InvalidAPIUsage(Exception):
             self.status_code = status_code
 
     def to_dict(self) -> dict:
-        return dict(message=self.message)
+        return dict(error=self.message)
 
 
 @app.errorhandler(InvalidAPIUsage)
