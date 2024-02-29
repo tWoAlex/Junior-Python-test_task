@@ -1,12 +1,16 @@
 from http import HTTPStatus
+from random import randint
 
 from flask.testing import FlaskClient
 
 from settings import FILE_SIZE_LIMIT
-from .utils import random_base64_data, random_file_name
+from .utils import (random_base64_data,
+                    random_file_extension,
+                    random_file_name,
+                    random_file_prefix)
 
 
-class TestAPIPostRequests:
+class TestAPICreate:
     def test_file_create_empty_body(self, client: FlaskClient):
         response = client.post('/files/create/')
 
@@ -71,3 +75,71 @@ class TestAPIPostRequests:
         assert 'already' in message, correct_response_body_descr
         assert 'exist' in message, correct_response_body_descr
         assert second_response.status_code == HTTPStatus.BAD_REQUEST
+
+
+class TestAPIList:
+    def test_file_list(self, client: FlaskClient):
+        files = ((random_file_name(), random_base64_data(FILE_SIZE_LIMIT))
+                 for _ in range(randint(3, 10)))
+        for name, data in files:
+            client.post('/files/create/',
+                        json={'file_name': name, name: data})
+        response = client.get('/files/get/list')
+
+        for name, data in files:
+            assert name in response.json, f'File "{name}" is missing'
+        assert response.status_code == HTTPStatus.OK
+
+    def test_file_list_by_ext(self, client: FlaskClient):
+        ext = random_file_extension()
+        files = (
+            (f'{random_file_prefix()}.{ext}',
+             random_base64_data(FILE_SIZE_LIMIT))
+            for _ in range(randint(3, 10))
+        )
+        another_file_name = f'{random_file_prefix()}.{ext + "abc"}'
+        another_file_data = random_base64_data(FILE_SIZE_LIMIT)
+        for name, data in files:
+            client.post('/files/create/',
+                        json={'file_name': name, name: data})
+        client.post('/files/create/',
+                    json={'file_name': another_file_name,
+                          another_file_name: another_file_data})
+        response = client.get(f'/files/get/{ext}')
+
+        assert another_file_name not in response.json, ('Extension filter'
+                                                        ' is broken')
+        for name, data in files:
+            assert name in response.json, ('File "{name}" from extension-'
+                                           'filtered list is missing')
+        assert response.status_code == HTTPStatus.OK
+
+
+class TestAPIGet:
+    def test_get_uploaded_file(self, client: FlaskClient):
+        prefix, ext = random_file_prefix(), random_file_extension()
+        file_name = f'{prefix}.{ext}'
+        data = random_base64_data(FILE_SIZE_LIMIT)
+        client.post('/files/create/',
+                    json={'file_name': file_name, file_name: data})
+        response = client.get(f'/files/get/{ext}/{prefix}')
+
+        assert 'file_name' in response.json, '"file_name" key is missing'
+        assert response.json['file_name'] in response.json, ('File name as'
+                                                             ' key is missing')
+        assert response.json['file_name'] == file_name, ('File name in '
+                                                         'response is broken')
+        assert response.json[file_name] == data, ('File data in response'
+                                                  ' is broken')
+        assert response.status_code == HTTPStatus.OK
+
+
+class TestAPIDelete:
+    def test_delete_existing_file(self, client: FlaskClient):
+        file_name = random_file_name()
+        data = random_base64_data(FILE_SIZE_LIMIT)
+        client.post('/files/create/',
+                    json={'file_name': file_name, file_name: data})
+        response = client.delete(f'/files/delete/{file_name}')
+
+        assert response.status_code == HTTPStatus.NO_CONTENT

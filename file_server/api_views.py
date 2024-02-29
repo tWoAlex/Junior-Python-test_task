@@ -28,7 +28,7 @@ def get_file(extension: str, file_name: str) -> tuple[str, int]:
         raise file_not_found
     print(file_crud.get(file_name))
     return jsonify({'file_name': file_name,
-                    'data': file_crud.get(file_name)})
+                    file_name: file_crud.get(file_name)})
 
 
 @app.delete('/files/delete/<string:file_name>')

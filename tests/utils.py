@@ -3,14 +3,20 @@ import random
 from string import ascii_letters
 
 
-def random_file_name() -> str:
-    prefix = ''.join(
+def random_file_prefix() -> str:
+    return ''.join(
         random.choices(ascii_letters, k=random.randint(10, 20))
     )
-    suffix = ''.join(
+
+
+def random_file_extension() -> str:
+    return ''.join(
         random.choices(ascii_letters, k=random.randint(2, 5))
     )
-    return '.'.join((prefix, suffix))
+
+
+def random_file_name() -> str:
+    return f'{random_file_prefix()}.{random_file_extension()}'
 
 
 def random_base64_data(size: int) -> str:
