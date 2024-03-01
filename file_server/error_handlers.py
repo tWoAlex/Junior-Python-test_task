@@ -6,6 +6,8 @@ from . import app
 
 
 class InvalidAPIUsage(Exception):
+    """Exception for bad requests"""
+
     status_code = HTTPStatus.BAD_REQUEST
 
     def __init__(self, message: str, status_code: int = None):
@@ -20,4 +22,5 @@ class InvalidAPIUsage(Exception):
 
 @app.errorhandler(InvalidAPIUsage)
 def invalid_api_usage(error) -> tuple[str, int]:
+    """InvalidAPIUsage handler"""
     return jsonify(error.to_dict()), error.status_code
