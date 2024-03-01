@@ -6,7 +6,7 @@ import dotenv
 
 dotenv.load_dotenv()
 
-MEDIA_DIR = Path(__file__).resolve().parent.joinpath(
+MEDIA_DIR: Path = Path(__file__).resolve().parent.joinpath(
     os.getenv('MEDIA_DIR', default='media')
 )
-FILE_SIZE_LIMIT = 1024 * 1024
+FILE_SIZE_LIMIT: int = int(os.getenv('FILE_SIZE_LIMIT', default=1_048_576))
