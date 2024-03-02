@@ -21,6 +21,9 @@ python3 -m venv env
 ```
 source env/bin/activate
 ```
+```
+pip install -r requirements.txt
+```
 
 * Windows:
 ```
@@ -29,9 +32,13 @@ python -m venv venv
 ```
 source venv/Scripts/activate
 ```
+```
+pip install -r requirements.txt
+```
 
 **Шаг 3. Заполни файл `.env`:**
 ```
+FLASK_APP=file_server
 FLASK_DEBUG=False
 FILE_SIZE_LIMIT=1048576  # Максимальный размер хранимого файла
 MEDIA_DIR=media          # Название локальной папки, в которой будут
